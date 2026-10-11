@@ -5,10 +5,24 @@ COLUNAS = ['SG_UF_PROVA', 'Q007']
 
 df = pd.read_csv(ARQUIVO, sep=';', encoding='latin1', usecols=COLUNAS)
 
-renda_uf = pd.crosstab(df['SG_UF_PROVA'], df['Q007'], normalize='index')
+FAIXAS = {
+    'A': 'ATE_1SM', 'B': 'ATE_1SM',
+    'C': '1_A_3SM', 'D': '1_A_3SM', 'E': '1_A_3SM', 'F': '1_A_3SM',
+    'G': '3_A_5SM', 'H': '3_A_5SM',
+    'I': 'ACIMA_5SM', 'J': 'ACIMA_5SM', 'K': 'ACIMA_5SM', 'L': 'ACIMA_5SM',
+    'M': 'ACIMA_5SM', 'N': 'ACIMA_5SM', 'O': 'ACIMA_5SM', 'P': 'ACIMA_5SM',
+    'Q': 'ACIMA_5SM',
+}
+ORDEM_FAIXAS = ['ATE_1SM', '1_A_3SM', '3_A_5SM', 'ACIMA_5SM']
 
-pd.set_option('display.width', 250)
-pd.set_option('display.max_columns', None)
+df['FAIXA_RENDA'] = df['Q007'].map(FAIXAS)
+print(df['FAIXA_RENDA'].isna().sum())
 
-print(renda_uf.round(3))
-print(renda_uf.sum(axis=1))
+print(df['FAIXA_RENDA'].value_counts(normalize=True)[ORDEM_FAIXAS].round(3))
+
+contagem = pd.crosstab(df['SG_UF_PROVA'], df['FAIXA_RENDA'])[ORDEM_FAIXAS]
+print(contagem)
+
+renda_faixas = pd.crosstab(df['SG_UF_PROVA'], df['FAIXA_RENDA'], normalize='index')[ORDEM_FAIXAS]
+print(renda_faixas.round(3))
+print(renda_faixas.sum(axis=1))
