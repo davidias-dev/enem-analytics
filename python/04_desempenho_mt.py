@@ -4,15 +4,7 @@ ARQUIVO = 'data/raw/RESULTADOS_2024.csv'
 COLUNAS = ['CO_UF_PROVA', 'SG_UF_PROVA', 'TP_PRESENCA_MT', 'NU_NOTA_MT']
 
 df = pd.read_csv(ARQUIVO, sep=';', encoding='latin1', usecols=COLUNAS)
-
-# print(df.shape)
-# print(df['TP_PRESENCA_MT'].value_counts(dropna=False))
-print(df.groupby('TP_PRESENCA_MT')['NU_NOTA_MT'].agg(['size', 'count', 'min', 'max']))
-
-print((df['NU_NOTA_MT'] == 0).sum())
-
 df_mt = df[df['TP_PRESENCA_MT'] == 1]
-print(df_mt.shape)
 
 desempenho_mt = (
     df_mt
@@ -28,5 +20,19 @@ desempenho_mt = (
     .reset_index(drop=True)
 )
 
-print(desempenho_mt.round(3))
-print(desempenho_mt['N_MT'].sum())
+df_mt_sem_zero = df_mt[df_mt['NU_NOTA_MT'] > 0]
+media_sem_zero = df_mt_sem_zero.groupby('SG_UF_PROVA')['NU_NOTA_MT'].mean()
+
+diferenca = desempenho_mt.set_index('SG_UF_PROVA')['MEDIA_MT'] - media_sem_zero
+print(diferenca.abs().max())
+
+df['PRESENTE_MT'] = (df['TP_PRESENCA_MT'] == 1)
+
+presenca_mt = (
+    df
+    .groupby('SG_UF_PROVA')
+    .agg(PROP_PRESENTES_MT=('PRESENTE_MT', 'mean'))
+    .reset_index()
+)
+
+print(presenca_mt.sort_values('PROP_PRESENTES_MT').round(3))

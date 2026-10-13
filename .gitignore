@@ -4,5 +4,6 @@ __pycache__/
 .env
 .ipynb_checkpoints/
 data/raw/
+outputs/
 .DS_Store
 Thumbs.db
