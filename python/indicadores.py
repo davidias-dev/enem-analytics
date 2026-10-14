@@ -10,6 +10,15 @@ FAIXAS_RENDA = {
 }
 ORDEM_FAIXAS_RENDA = ['ATE_1SM', '1_A_3SM', '3_A_5SM', 'ACIMA_5SM']
 
+GRUPOS_INTERNET = {'A': 'NAO', 'B': 'SIM'}
+
+GRUPOS_COMPUTADOR = {
+    'A': 'NENHUM',
+    'B': 'UM',
+    'C': 'DOIS_OU_MAIS', 'D': 'DOIS_OU_MAIS', 'E': 'DOIS_OU_MAIS',
+}
+ORDEM_COMPUTADOR = ['NENHUM', 'UM', 'DOIS_OU_MAIS']
+
 REGIOES = {
     1: 'Norte',
     2: 'Nordeste',
@@ -64,6 +73,15 @@ def proporcoes(df, chave, coluna, prefixo, ordem=None):
     return tabela.add_prefix(prefixo)
 
 
+def proporcoes_agrupadas(df, chave, coluna, mapa, prefixo, ordem):
+    """Agrupa as categorias de `coluna` segundo `mapa` e calcula a proporção
+    de cada grupo dentro de cada unidade. Só as colunas em `ordem` são mantidas."""
+    agrupada = df[coluna].map(mapa)
+    if agrupada.isna().any():
+        raise ValueError(f'{coluna} tem categorias que não estão no mapa')
+    return proporcoes(df.assign(GRUPO=agrupada), chave, 'GRUPO', prefixo, ordem)
+
+
 def perfil_basico(df, chave):
     """Número de participantes, treineiros e proporção feminina por grupo."""
     return (
@@ -80,15 +98,23 @@ def perfil_basico(df, chave):
 
 def perfil_renda(df, chave):
     """Proporção de participantes em cada faixa de renda familiar (Q007)."""
-    faixa = df['Q007'].map(FAIXAS_RENDA)
-    if faixa.isna().any():
-        raise ValueError('Q007 tem categorias que não estão em FAIXAS_RENDA')
-    return proporcoes(
-        df.assign(FAIXA_RENDA=faixa),
-        chave,
-        'FAIXA_RENDA',
-        'PROP_RENDA_',
-        ORDEM_FAIXAS_RENDA,
+    return proporcoes_agrupadas(
+        df, chave, 'Q007', FAIXAS_RENDA, 'PROP_RENDA_', ORDEM_FAIXAS_RENDA
+    )
+
+
+def perfil_tecnologia(df, chave):
+    """Acesso à internet (Q020) e quantidade de computadores (Q021)."""
+    return pd.concat(
+        [
+            proporcoes_agrupadas(
+                df, chave, 'Q020', GRUPOS_INTERNET, 'PROP_INTERNET_', ['SIM']
+            ),
+            proporcoes_agrupadas(
+                df, chave, 'Q021', GRUPOS_COMPUTADOR, 'PROP_COMPUTADOR_', ORDEM_COMPUTADOR
+            ),
+        ],
+        axis=1,
     )
 
 
@@ -97,6 +123,7 @@ def resumir_perfil(df, chave):
     partes = [
         perfil_basico(df, chave),
         perfil_renda(df, chave),
+        perfil_tecnologia(df, chave),
     ]
     return pd.concat(partes, axis=1).reset_index()
 

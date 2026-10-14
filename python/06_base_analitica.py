@@ -11,9 +11,9 @@ base = perfil.merge(
     indicator=True,
 )
 
-print(base['_merge'].value_counts())
+# print(base['_merge'].value_counts())
 
 base = base.drop(columns='_merge')
-print(base.shape)
+# print(base.shape)
 
 base.to_csv('data/processed/base_analitica_estadual.csv', index=False)
