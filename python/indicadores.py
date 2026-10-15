@@ -19,6 +19,31 @@ GRUPOS_COMPUTADOR = {
 }
 ORDEM_COMPUTADOR = ['NENHUM', 'UM', 'DOIS_OU_MAIS']
 
+GRUPO_ESCOLARIDADE = {
+    'A': 'ATE_FUND_INCOMPLETO', 'B': 'ATE_FUND_INCOMPLETO', 'C': 'ATE_FUND_INCOMPLETO',
+    'D': 'FUND_COMPLETO',
+    'E': 'MEDIO_COMPLETO',
+    'F': 'SUPERIOR_OU_MAIS', 'G': 'SUPERIOR_OU_MAIS',
+    'H': 'NAO_SABE',
+}
+ORDEM_ESCOLARIDADE = [
+    'ATE_FUND_INCOMPLETO', 'FUND_COMPLETO', 'MEDIO_COMPLETO',
+    'SUPERIOR_OU_MAIS', 'NAO_SABE',
+]
+
+GRUPOS_ESCOLA = {
+    'A': 'SO_PUBLICA',
+    'B': 'MISTA', 'C': 'MISTA',
+    'D': 'SO_PRIVADA_SEM_BOLSA',
+    'E': 'SO_PRIVADA_BOLSA_INTEGRAL',
+    'F': 'SEM_ENSINO_MEDIO',
+}
+
+ORDEM_ESCOLA = [
+    'SO_PUBLICA', 'MISTA', 'SO_PRIVADA_SEM_BOLSA',
+    'SO_PRIVADA_BOLSA_INTEGRAL', 'SEM_ENSINO_MEDIO',
+]
+
 REGIOES = {
     1: 'Norte',
     2: 'Nordeste',
@@ -118,12 +143,36 @@ def perfil_tecnologia(df, chave):
     )
 
 
+def perfil_escolaridade(df, chave):
+    """Escolaridade do pai/homem responsável (Q001) e da mãe/mulher responsável (Q002)."""
+    return pd.concat(
+        [
+            proporcoes_agrupadas(
+                df, chave, 'Q001', GRUPO_ESCOLARIDADE, 'PROP_ESC_PAI_', ORDEM_ESCOLARIDADE
+            ),
+            proporcoes_agrupadas(
+                df, chave, 'Q002', GRUPO_ESCOLARIDADE, 'PROP_ESC_MAE_', ORDEM_ESCOLARIDADE
+            ),
+        ],
+        axis=1,
+    )
+
+
+def perfil_escola(df, chave):
+    """Tipo de escola cursada no Ensino Médio (Q023)."""
+    return proporcoes_agrupadas(
+        df, chave, 'Q023', GRUPOS_ESCOLA, 'PROP_ESCOLA_', ORDEM_ESCOLA 
+    )
+
+
 def resumir_perfil(df, chave):
     """Junta todos os indicadores de perfil numa única tabela por grupo."""
     partes = [
         perfil_basico(df, chave),
         perfil_renda(df, chave),
         perfil_tecnologia(df, chave),
+        perfil_escolaridade(df, chave),
+        perfil_escola(df, chave)
     ]
     return pd.concat(partes, axis=1).reset_index()
 
